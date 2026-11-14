@@ -16,8 +16,9 @@ uv.lock
 coverage.xml
 htmlcov/
 
-# Archive database (rebuilt by `antilethe ingest`)
-data/
+# Archive database (rebuilt by `antilethe ingest`). Anchored to the repo root:
+# an unanchored `data/` would also hide frontend/src/lib/data.
+/data/
 *.db
 *.db-wal
 *.db-shm
