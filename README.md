@@ -116,8 +116,13 @@ range requests, so a dropped download restarts from zero.
 Two things make this workable:
 
 - **The throttle is per connection, not per account.** `--concurrency N` fetches
-  N days (or N series) at once and multiplies effective throughput; sixteen
-  connections at 9 KB/s each is still 150 KB/s.
+  N days (or N series) at once and multiplies effective throughput; twelve
+  connections at 9 KB/s each is still 108 KB/s. Upstream accepts about **twenty
+  concurrent connections per address** and refuses the rest outright, so keep
+  `N` at 12 to 16: a 32-connection run lands twenty days per batch and fails
+  the other twelve on the first connect, and a stalled connection's retry is
+  refused too while the others hold the slots. Failed days are simply fetched
+  again by the next `ingest` over the same range, which skips complete days.
 - **`--questions` fetches depth instead of width.** One `(question, model)`
   series is a single small request covering *every* day the archive holds. A
   handful of questions across all models and all days costs minutes, where the
@@ -130,7 +135,7 @@ Two things make this workable:
 antilethe ingest --questions are-ai-chatbots-biased,is-climate-change-real
 
 # wide: every question, whole days from the bulk export, one request per day
-antilethe ingest --since 2026-07-18 --until 2026-11-11 --concurrency 16
+antilethe ingest --since 2026-07-18 --until 2026-11-11 --concurrency 12
 
 # with a key the request-rate limit rises from 30/min to 120/min
 AMT_KEY=... antilethe ingest
