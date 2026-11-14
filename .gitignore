@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+# uv resolves from pyproject.toml; the lock is not committed for a library.
+uv.lock
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Archive database (rebuilt by `antilethe ingest`)
+data/
+*.db
+*.db-wal
+*.db-shm
+
+# Generated dataset (written by `antilethe export`)
+frontend/static/data/
+
+# Node / SvelteKit
+node_modules/
+frontend/.svelte-kit/
+frontend/build/
+frontend/.vite/
+*.tsbuildinfo
+
+# Note: frontend/.env is deliberately NOT ignored. It declares PUBLIC_API_BASE
+# as empty so the `$env/static/public` import always resolves, which is what
+# lets the published site work with no API configured. It holds no secret.
+
+# Editors / OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

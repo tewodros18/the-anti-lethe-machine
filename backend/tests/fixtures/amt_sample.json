@@ -1,0 +1,81 @@
+{
+  "_comment": "Synthetic AMT API payloads mirroring the real response shape, which was verified against the live API before this file was written. This is the only place in the repository where fabricated values are allowed to exist, and nothing under src/ may import it. It deliberately exercises the awkward parts of the upstream contract: cost and prices arrive as decimal strings, the serving host lives at turns[0].provider and is NOT the top-level provider field, a failed generation has an empty turns list, and canonical_slug changes only on a genuine repoint.",
+
+  "questions": {
+    "count": 2,
+    "next": null,
+    "previous": null,
+    "results": [
+      {
+        "slug": "is-coffee-good-for-you",
+        "question_text": "Is coffee good for you?",
+        "enabled": true,
+        "expires_on": null,
+        "tags": ["Health", "Nutrition"],
+        "url": "https://example.invalid/questions/is-coffee-good-for-you/"
+      },
+      {
+        "slug": "who-invented-the-telescope",
+        "question_text": "Who invented the telescope?",
+        "enabled": true,
+        "expires_on": null,
+        "tags": ["History"],
+        "url": "https://example.invalid/questions/who-invented-the-telescope/"
+      }
+    ]
+  },
+
+  "models": {
+    "count": 3,
+    "next": null,
+    "previous": null,
+    "results": [
+      {
+        "model_id": "openweight/steady-7b",
+        "provider": "openweight",
+        "canonical_slug": "openweight/steady-7b",
+        "name": "OpenWeight: Steady 7B",
+        "context_length": 32768,
+        "prompt_price": "0.000000200000",
+        "completion_price": "0.000000600000",
+        "selected": true,
+        "url": "https://example.invalid/models/1/"
+      },
+      {
+        "model_id": "openweight/roamer-13b",
+        "provider": "openweight",
+        "canonical_slug": "openweight/roamer-13b",
+        "name": "OpenWeight: Roamer 13B",
+        "context_length": 65536,
+        "prompt_price": "0.000000400000",
+        "completion_price": "0.000001200000",
+        "selected": true,
+        "url": "https://example.invalid/models/2/"
+      },
+      {
+        "model_id": "closedlab/oracle",
+        "provider": "closedlab",
+        "canonical_slug": "closedlab/oracle-2026-01-15",
+        "name": "ClosedLab: Oracle",
+        "context_length": 200000,
+        "prompt_price": "0.000003000000",
+        "completion_price": "0.000009000000",
+        "selected": true,
+        "url": "https://example.invalid/models/3/"
+      }
+    ]
+  },
+
+  "stats": {
+    "responses": 18,
+    "questions": 2,
+    "models": 3,
+    "incomplete": 1,
+    "rejected": 0,
+    "successful": 17,
+    "total_tokens": 9000,
+    "total_cost": "0.123456",
+    "total_duration_ms": 54000,
+    "day_range": { "earliest": "2026-03-01", "latest": "2026-03-03" }
+  }
+}

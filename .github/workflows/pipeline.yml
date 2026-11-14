@@ -1,0 +1,191 @@
+name: pipeline
+
+# The daily run: top up the archive, recompute, export, build, deploy to Pages.
+#
+# Upstream throttles anonymous readers, at times to under 10 KB/s per
+# connection, so this job is built around *not* downloading history. It carries
+# the archive between runs in the Actions cache, seeds it from a release asset
+# when the cache is empty, and each day fetches only the last few days' bulk
+# exports (one request per day, a minute or so each). Setting the repo variable
+# ANTILETHE_QUESTIONS switches it to the cheaper deep-questions mode instead:
+# only those questions, full history, topped up newest-first.
+
+on:
+  schedule:
+    # Daily, after the upstream archive has finished the day's run.
+    - cron: '0 17 * * *'
+  workflow_dispatch:
+    inputs:
+      questions:
+        description: 'Deep-questions mode: comma-separated slugs (blank: repo variable ANTILETHE_QUESTIONS, else whole days)'
+        required: false
+      force:
+        description: 'Re-read every series in full instead of topping up'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pipeline
+  cancel-in-progress: false
+
+env:
+  # Checkpoints. These must match whatever produced any model-backed distances
+  # already in the archive: the checkpoint is recorded per method in
+  # manifest.json at export time from exactly these settings. The published
+  # archive used the small BGE encoder for embeddings and the default DeBERTa
+  # cross-encoder (run on a GPU) for nli and stance_nli.
+  ANTILETHE_EMBEDDING_MODEL: BAAI/bge-small-en-v1.5
+  ANTILETHE_NLI_MAX_CHARS: '1500'
+  # What a daily run analyses and exports. Override with repo variables:
+  #   ANTILETHE_QUESTIONS       deep-questions mode: comma-separated slugs (default: whole days)
+  #   ANTILETHE_MODEL_METHODS   e.g. embedding,embedding_map,nli — opt in; hours of CPU
+  #   ANTILETHE_EXPORT_METHODS  e.g. cosine_bow,jaccard_ngram,ncd,embedding,nli
+  #   ANTILETHE_DAYS_BACK       whole-day mode: how many recent days to (re)fetch, default 4
+  CHEAP_METHODS: cosine_bow,jaccard_ngram,ncd,markers,tokens
+  DEFAULT_EXPORT: cosine_bow,jaccard_ngram,ncd
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Install pipeline
+        # The venv goes on PATH for every later step. The model extras are
+        # only installed when a repo variable asks for model-backed methods.
+        run: |
+          uv venv --python 3.12
+          if [ -n "${{ vars.ANTILETHE_MODEL_METHODS }}" ]; then
+            uv pip install -e 'backend[all]'
+          else
+            uv pip install -e 'backend[tokens]'
+          fi
+          echo "VIRTUAL_ENV=$PWD/.venv" >> "$GITHUB_ENV"
+          echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
+
+      # The cache carries the archive from one daily run to the next.
+      - name: Restore archive
+        uses: actions/cache/restore@v4
+        with:
+          path: ./data
+          key: archive-db-${{ github.run_id }}
+          restore-keys: |
+            archive-db-
+
+      # The seed: a release tagged `archive` holding the archive, uploaded from a
+      # machine that did the slow backfill (and, if it ran them, the
+      # model-backed methods). Used only when the cache is empty. Release
+      # assets are capped at 2 GB each, so the asset may be archive.db,
+      # archive.db.gz, or archive.db.gz.part-aa, -ab, ... from `split`.
+      - name: Seed archive from the `archive` release
+        if: hashFiles('data/archive.db') == ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p data
+          if gh release download archive --pattern 'archive.db*' --dir data --repo "$GITHUB_REPOSITORY"; then
+            cd data
+            if ls archive.db.gz.part-* >/dev/null 2>&1; then
+              cat archive.db.gz.part-* > archive.db.gz && rm archive.db.gz.part-*
+            fi
+            if [ -f archive.db.gz ]; then
+              gzip -d archive.db.gz
+            fi
+            ls -la
+            echo "seeded from release"
+          else
+            echo "no seed release found; starting from an empty archive"
+          fi
+
+      - name: Cache model checkpoints
+        if: vars.ANTILETHE_MODEL_METHODS != ''
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface
+          key: hf-models-${{ env.ANTILETHE_EMBEDDING_MODEL }}-${{ env.ANTILETHE_NLI_MODEL || 'default-nli' }}
+
+      - name: Ingest
+        # Whole-day mode re-reads the last few days, because upstream's day is
+        # still filling in when this runs and a day is only marked complete once
+        # its row count matches upstream's. Deep-questions mode tops up each
+        # series newest-first and stops at days already stored.
+        env:
+          AMT_KEY: ${{ secrets.AMT_KEY }}
+          QUESTIONS: ${{ inputs.questions || vars.ANTILETHE_QUESTIONS }}
+          DAYS_BACK: ${{ vars.ANTILETHE_DAYS_BACK || '4' }}
+          FORCE: ${{ inputs.force && '--force' || '' }}
+        run: |
+          if [ -n "$QUESTIONS" ]; then
+            antilethe ingest --questions "$QUESTIONS" --concurrency 6 $FORCE
+          else
+            antilethe ingest \
+              --since "$(date -u -d "$DAYS_BACK days ago" +%F)" \
+              --until "$(date -u +%F)" \
+              --concurrency 8 $FORCE
+          fi
+
+      - name: Analyze
+        # Cheap measures always; model-backed ones only when asked for, because
+        # on a two-core runner they are hours per run even for three questions.
+        run: |
+          antilethe analyze --methods "${{ env.CHEAP_METHODS }}"
+          if [ -n "${{ vars.ANTILETHE_MODEL_METHODS }}" ]; then
+            antilethe analyze --methods "${{ vars.ANTILETHE_MODEL_METHODS }}"
+          fi
+
+      - name: Verify ledger
+        # Fails the run if any stored root no longer matches the rows, or if an
+        # interrupted ingest left rows no ledger entry covers.
+        run: antilethe verify
+
+      - name: Export dataset
+        # One index per exported measure; the site switches between them. A
+        # measure listed here must have distances in the archive, from this
+        # run or from the seed.
+        run: antilethe export --out frontend/static/data --methods "${{ vars.ANTILETHE_EXPORT_METHODS || env.DEFAULT_EXPORT }}"
+
+      - name: Save archive
+        uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: ./data
+          key: archive-db-${{ github.run_id }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install site
+        run: npm ci
+        working-directory: frontend
+
+      - name: Build site
+        run: npm run build
+        working-directory: frontend
+        env:
+          BASE_PATH: /${{ github.event.repository.name }}
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: frontend/build
+
+      - name: Deploy
+        id: deploy
+        uses: actions/deploy-pages@v4

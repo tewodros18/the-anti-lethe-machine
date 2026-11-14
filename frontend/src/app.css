@@ -1,0 +1,342 @@
+/* ==========================================================================
+   Anti-Lethe design tokens.
+
+   Every token gets its first definition on bare :root, then is redefined under
+   both the media query and the explicit [data-theme="dark"] attribute, so the
+   manual toggle and the OS preference reach the same place.
+   ========================================================================== */
+
+:root {
+	color-scheme: light;
+
+	--paper: #eef1f3;
+	--plate: #fbfcfd;
+	--sunk: #e3e8eb;
+	--ink: #121a20;
+	--ink-2: #4a5a66;
+	--ink-3: #7b8b97;
+	--rule: #d0d8dd;
+	--rule-2: #bcc7ce;
+	--band: #c8d4da;
+	--accent: #17556f;
+
+	/* Categorical series. Validated for lightness band, chroma floor,
+	   colour-vision-deficiency separation and contrast. Fixed order; there is
+	   no seventh hue, and these are never cycled. */
+	--c1: #1c7fa8;
+	--c2: #c4521c;
+	--c3: #9a3d96;
+	--c4: #4f7b2f;
+	--c5: #3b4fa0;
+	--c6: #96731a;
+
+	/* Semantic. Reserved: never reused as a series colour. */
+	--good: #2d6a4a;
+	--warn: #9a6a12;
+	--critical: #9b2c2c;
+
+	/* Film grain strength. This is the dial to turn: 0 removes the texture
+	   entirely. Kept low because the register's smallest labels are 0.6rem
+	   monospace, and texture over type costs contrast before it costs anything
+	   else. */
+	--grain-opacity: 0.15;
+
+	--font-display: 'Newsreader', ui-serif, Georgia, 'Times New Roman', serif;
+	--font-body: 'IBM Plex Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+	--font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', 'Cascadia Mono', Consolas, monospace;
+
+	--radius: 3px;
+	--gutter: 16px;
+	--measure: 68ch;
+	--plate-max: 1180px;
+}
+
+@media (prefers-color-scheme: dark) {
+	:root:not([data-theme='light']) {
+		color-scheme: dark;
+
+		--paper: #0e1418;
+		--plate: #151d23;
+		--sunk: #1b242b;
+		--ink: #e2e9ee;
+		--ink-2: #9aabb6;
+		--ink-3: #6c7d89;
+		--rule: #253139;
+		--rule-2: #33434d;
+		--band: #2b3a44;
+		--accent: #74b9d6;
+
+		--c1: #2e93be;
+		--c2: #d96e33;
+		--c3: #b355ad;
+		--c4: #639b40;
+		--c5: #5a72c9;
+		--c6: #ad8524;
+
+		--good: #5fa27c;
+		--warn: #c79a3c;
+		--critical: #d1685f;
+
+		/* Bright noise reads louder against a dark ground, so it is dialled back. */
+		--grain-opacity: 0.09;
+	}
+}
+
+:root[data-theme='dark'] {
+	color-scheme: dark;
+
+	--paper: #0e1418;
+	--plate: #151d23;
+	--sunk: #1b242b;
+	--ink: #e2e9ee;
+	--ink-2: #9aabb6;
+	--ink-3: #6c7d89;
+	--rule: #253139;
+	--rule-2: #33434d;
+	--band: #2b3a44;
+	--accent: #74b9d6;
+
+	--c1: #2e93be;
+	--c2: #d96e33;
+	--c3: #b355ad;
+	--c4: #639b40;
+	--c5: #5a72c9;
+	--c6: #ad8524;
+
+	--good: #5fa27c;
+	--warn: #c79a3c;
+	--critical: #d1685f;
+
+	/* Bright noise reads louder against a dark ground, so it is dialled back. */
+	--grain-opacity: 0.09;
+}
+
+/* ========================================================================== */
+
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+
+html {
+	-webkit-text-size-adjust: 100%;
+}
+
+body {
+	margin: 0;
+	background: var(--paper);
+	color: var(--ink);
+	font-family: var(--font-body);
+	font-size: 16px;
+	line-height: 1.55;
+	/* The page itself must never scroll sideways, at any width. */
+	overflow-x: hidden;
+}
+
+/* ---- film grain --------------------------------------------------------- */
+
+/*
+ * One pseudo-element carrying the SVG turbulence filter defined in app.html.
+ * It needs no background: `feTurbulence` generates the noise as the filter's
+ * output, so the filter paints the element.
+ *
+ * `fixed` rather than `absolute`: the register's pages are long, and an
+ * absolutely positioned overlay would be as tall as the document, leaving the
+ * browser to rasterise a filter over the whole scroll height. Fixed costs one
+ * viewport no matter how long the page, and does not re-rasterise on scroll.
+ * Swap it to `position: absolute; inset: 0 0 auto 0; height: 100%;` if you want
+ * the texture to travel with the paper instead of sitting still over it.
+ */
+body::before {
+	content: '';
+	position: fixed;
+	inset: 0;
+	/* Above every other layer: the masthead is 20, the chart tooltip 10, the
+	   skip link 100. Grain belongs on top of all of them. */
+	z-index: 9999;
+	opacity: var(--grain-opacity);
+	filter: url(#grain);
+	/* Never intercept a click, a hover or a focus ring. */
+	pointer-events: none;
+}
+
+/* High-contrast mode exists to strip decoration away from text. Texture over
+   type is the first thing that should go. */
+@media (forced-colors: active) {
+	body::before {
+		display: none;
+	}
+}
+
+h1,
+h2,
+h3,
+h4 {
+	font-family: var(--font-display);
+	font-weight: 500;
+	line-height: 1.18;
+	margin: 0;
+	letter-spacing: -0.01em;
+}
+
+h1 {
+	font-size: clamp(1.75rem, 1.2rem + 2.2vw, 2.6rem);
+	font-weight: 600;
+}
+h2 {
+	font-size: clamp(1.25rem, 1.05rem + 0.8vw, 1.6rem);
+}
+h3 {
+	font-size: 1.1rem;
+}
+
+p {
+	margin: 0 0 0.85em;
+	max-width: var(--measure);
+}
+
+a {
+	color: var(--accent);
+	text-decoration-thickness: 1px;
+	text-underline-offset: 2px;
+}
+
+a:hover {
+	text-decoration-thickness: 2px;
+}
+
+code,
+kbd,
+samp,
+pre {
+	font-family: var(--font-mono);
+	font-size: 0.9em;
+}
+
+/* Every digit that a reader might compare vertically is tabular. */
+.num,
+table,
+th,
+td,
+.mono {
+	font-family: var(--font-mono);
+	font-variant-numeric: tabular-nums;
+}
+
+:focus-visible {
+	outline: 2px solid var(--accent);
+	outline-offset: 2px;
+	border-radius: 2px;
+}
+
+/* Visible only to screen readers. */
+.sr-only {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border: 0;
+}
+
+/* ---- shared controls ---------------------------------------------------- */
+
+button,
+select,
+input {
+	font-family: inherit;
+	font-size: 0.9rem;
+	color: var(--ink);
+}
+
+.btn {
+	background: var(--plate);
+	border: 1px solid var(--rule-2);
+	border-radius: var(--radius);
+	padding: 0.35em 0.7em;
+	cursor: pointer;
+	font-family: var(--font-mono);
+	font-size: 0.78rem;
+	letter-spacing: 0.02em;
+	transition: border-color 0.12s ease;
+}
+
+.btn:hover {
+	border-color: var(--accent);
+}
+
+.btn[aria-pressed='true'] {
+	background: var(--sunk);
+	border-color: var(--accent);
+}
+
+select {
+	background: var(--plate);
+	border: 1px solid var(--rule-2);
+	border-radius: var(--radius);
+	padding: 0.35em 0.5em;
+	max-width: 100%;
+}
+
+label {
+	display: block;
+	font-family: var(--font-mono);
+	font-size: 0.72rem;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--ink-3);
+	margin-bottom: 0.3em;
+}
+
+/* ---- tables ------------------------------------------------------------- */
+
+table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 0.82rem;
+}
+
+th,
+td {
+	text-align: right;
+	padding: 0.4em 0.55em;
+	border-bottom: 1px solid var(--rule);
+	white-space: nowrap;
+}
+
+th:first-child,
+td:first-child {
+	text-align: left;
+}
+
+thead th {
+	color: var(--ink-3);
+	font-weight: 500;
+	font-size: 0.7rem;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	border-bottom: 1px solid var(--rule-2);
+	position: sticky;
+	top: 0;
+	background: var(--plate);
+}
+
+/* A null is always an em dash, never a zero. */
+.nil {
+	color: var(--ink-3);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+		scroll-behavior: auto !important;
+	}
+}

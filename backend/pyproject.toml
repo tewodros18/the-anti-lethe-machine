@@ -1,0 +1,103 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "antilethe"
+version = "0.1.0"
+description = "A public drift register for AI model behaviour, built on the Internet Archive's Ask Me Twice archive."
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+authors = [{ name = "Anti-Lethe contributors" }]
+keywords = ["ai", "drift", "archive", "internet-archive", "openrouter"]
+classifiers = [
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Scientific/Engineering :: Information Analysis",
+]
+dependencies = [
+  "httpx>=0.27",
+  "pydantic>=2.7",
+  "pydantic-settings>=2.3",
+  "typer>=0.12",
+  "fastapi>=0.111",
+  "uvicorn[standard]>=0.30",
+  "polars>=1.0",
+]
+
+[project.optional-dependencies]
+embedding = ["sentence-transformers>=3.0", "numpy>=1.26"]
+nli = ["transformers>=4.40", "torch>=2.2"]
+tokens = ["tiktoken>=0.7"]
+all = ["antilethe[embedding,nli,tokens]"]
+dev = [
+  "pytest>=8.2",
+  "pytest-asyncio>=0.23",
+  "pytest-cov>=5.0",
+  "respx>=0.21",
+  # Generates a JSON Schema from the pydantic models so the exported dataset can
+  # be validated against the contract in tests/test_contract.py.
+  "jsonschema>=4.22",
+  "ruff>=0.5",
+  "mypy>=1.10",
+]
+
+[project.scripts]
+antilethe = "antilethe.cli:app"
+
+[project.urls]
+Homepage = "https://github.com/anti-lethe/anti-lethe"
+Source = "https://github.com/anti-lethe/anti-lethe"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/antilethe"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "UP", "B", "A", "C4", "SIM", "RUF", "ANN"]
+ignore = ["ANN401"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["ANN"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_unreachable = true
+disallow_untyped_decorators = false
+plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = [
+  "sentence_transformers",
+  "sentence_transformers.*",
+  "transformers",
+  "transformers.*",
+  "torch",
+  "torch.*",
+  "tiktoken",
+  "numpy",
+  "numpy.*",
+]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+addopts = "-q --cov=antilethe --cov-report=term-missing"
+
+[tool.coverage.run]
+source = ["src/antilethe"]
+# Model-backed methods need the optional extras and a model download; they are
+# exercised by the integration run, not the unit suite.
+omit = [
+  "*/methods/embedding.py",
+  "*/methods/nli.py",
+  "*/methods/stance_nli.py",
+  "*/methods/tokens.py",
+]

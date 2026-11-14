@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<link rel="icon" href="%sveltekit.assets%/favicon.svg" />
+		<meta
+			name="description"
+			content="A public drift register for AI model behaviour: how archived answers changed, separated by whether the cause was sampling noise, a change of inference host, or a new model build."
+		/>
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+			rel="stylesheet"
+		/>
+		<script>
+			// Apply the stored theme before first paint so the page never flashes
+			// the wrong background. Wrapped because storage can throw.
+			try {
+				const stored = localStorage.getItem('antilethe-theme');
+				if (stored === 'dark' || stored === 'light') {
+					document.documentElement.setAttribute('data-theme', stored);
+				}
+			} catch (e) {
+				/* storage unavailable; the media query still applies */
+			}
+		</script>
+		%sveltekit.head%
+	</head>
+	<body data-sveltekit-preload-data="hover">
+		<!--
+			Film grain. `feTurbulence` generates noise as the filter's *output*, so the
+			element it is applied to needs no content and no background: the filter
+			paints it. `app.css` points `body::before` at this filter.
+
+			The host SVG is 0x0 and absolutely positioned so it contributes nothing to
+			layout. It must not be `display: none`, which stops some browsers
+			resolving `url(#grain)`.
+
+			Dropping the `feColorMatrix` leaves the raw coloured static that
+			`feTurbulence` produces. It is desaturated here because this project's
+			series palette is chosen for chroma separation, and random colour laid
+			over every chart works against that.
+		-->
+		<svg
+			aria-hidden="true"
+			focusable="false"
+			style="position: absolute; width: 0; height: 0; overflow: hidden"
+		>
+			<filter id="grain">
+				<feTurbulence type="turbulence" baseFrequency="0.69" />
+				<feColorMatrix type="saturate" values="0" />
+			</filter>
+		</svg>
+
+		<div style="display: contents">%sveltekit.body%</div>
+	</body>
+</html>

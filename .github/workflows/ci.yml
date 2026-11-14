@@ -1,0 +1,106 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Install
+        # The venv goes on PATH for every later step. `uv run` is deliberately
+        # not used below: from inside backend/ it would treat that directory's
+        # pyproject.toml as its own project and build a second environment.
+        run: |
+          uv venv --python 3.12
+          uv pip install -e 'backend[dev]'
+          echo "VIRTUAL_ENV=$PWD/.venv" >> "$GITHUB_ENV"
+          echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
+
+      - name: Lint
+        run: |
+          ruff check backend
+          ruff format --check backend
+
+      - name: Typecheck
+        # Run from backend/ so mypy picks up its pyproject.toml, which declares
+        # the optional extras' modules as having no stubs.
+        run: mypy --strict src
+        working-directory: backend
+
+      - name: Test
+        # Coverage must stay at or above 80%.
+        run: pytest --cov --cov-fail-under=80
+        working-directory: backend
+
+      - name: No fabricated data outside tests
+        # Hard rule: the dataset is never invented, so these markers must not
+        # appear in shipped code. Fabricated data lives only under
+        # backend/tests/, which is excluded.
+        #
+        # This file is excluded too, because it necessarily contains the very
+        # words it searches for.
+        run: |
+          if grep -rIEn --binary-files=without-match \
+               -e 'mock' -e 'dummy' -e 'placeholder' -e 'TODO' -e 'FIXME' -e 'lorem' \
+               --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=.venv \
+               --exclude-dir=build --exclude-dir=.svelte-kit \
+               --exclude-dir=tests --exclude-dir=data \
+               --exclude-dir=__pycache__ --exclude-dir=.mypy_cache \
+               --exclude-dir=.ruff_cache --exclude-dir=.pytest_cache \
+               --exclude=package-lock.json --exclude=ci.yml \
+               . ; then
+            echo "::error::found forbidden marker outside backend/tests/"
+            exit 1
+          fi
+          echo "clean"
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install
+        run: npm ci
+        working-directory: frontend
+
+      - name: Lint
+        run: npm run lint
+        working-directory: frontend
+
+      - name: Typecheck
+        run: npm run check
+        working-directory: frontend
+
+      - name: Test
+        run: npx vitest run
+        working-directory: frontend
+
+      - name: Build
+        # Builds with no dataset present, which must produce the designed
+        # "not built yet" state rather than failing or rendering zeros.
+        run: npm run build
+        working-directory: frontend
+        env:
+          BASE_PATH: /anti-lethe
