@@ -3,6 +3,7 @@
 	import DriftTimeline from '$lib/charts/DriftTimeline.svelte';
 	import Decomposition from '$lib/charts/Decomposition.svelte';
 	import DatasetGate from '$lib/components/DatasetGate.svelte';
+	import Findings from '$lib/components/Findings.svelte';
 	import Plate from '$lib/components/Plate.svelte';
 	import ReadingStrip from '$lib/components/ReadingStrip.svelte';
 	import { EM_DASH, fmt, fmtInt, fmtRatio, longDay } from '$lib/data/format';
@@ -113,6 +114,8 @@
 		<div class="strip-wrap">
 			<ReadingStrip {readings} />
 		</div>
+
+		<Findings {index} />
 
 		<Plate
 			title="Drift against its own noise floor"
