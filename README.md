@@ -408,7 +408,7 @@ the answer space — can only exist because of this hook.
 ```
 static/data/
 ├── index.json                  # everything except snapshot text
-├── manifest.json               # build provenance
+├── manifest.json               # build provenance, plus every day's Merkle root
 └── snapshots/
     └── {question_slug}.json    # all models × kept days for one question
 ```

@@ -96,6 +96,7 @@ describe('validateManifest', () => {
 			methods_installed: [{ name: 'cosine_bow', kind: 'pairwise', version: '1.0.0', model: null }],
 			methods_exported: ['cosine_bow'],
 			ledger_head: { day: '2026-03-04', merkle_root: 'ff'.repeat(32) },
+			ledger: [],
 			row_count: 17,
 			shard_bytes: {}
 		});
@@ -111,6 +112,7 @@ describe('validateManifest', () => {
 			methods_installed: [],
 			methods_exported: [],
 			ledger_head: null,
+			ledger: [],
 			row_count: 0,
 			shard_bytes: {}
 		});

@@ -447,6 +447,15 @@ def test_manifest_lists_available_methods(populated: sqlite3.Connection) -> None
     assert {"cosine_bow", "markers"} <= names
     assert manifest.ledger_head is not None
     assert manifest.ledger_head.day == DAYS[-1]
+    # Every ledger day is published, oldest first, chained, and the head is its last entry.
+    assert [entry.day for entry in manifest.ledger] == sorted(DAYS)
+    assert manifest.ledger[0].prev_root is None
+    assert all(entry.row_count > 0 for entry in manifest.ledger)
+    assert all(
+        later.prev_root == earlier.merkle_root
+        for earlier, later in zip(manifest.ledger, manifest.ledger[1:], strict=False)
+    )
+    assert manifest.ledger[-1].merkle_root == manifest.ledger_head.merkle_root
     assert manifest.row_count > 0
     assert manifest.shard_bytes == {"index.json": 123}
 

@@ -31,6 +31,7 @@ from antilethe.models import (
     GapSummary,
     Index,
     InstabilityCell,
+    LedgerDay,
     Manifest,
     ModelFingerprint,
     NoiseStats,
@@ -64,6 +65,7 @@ PAIRS: list[tuple[type[BaseModel], str]] = [
     (Snapshot, "Snapshot"),
     (SnapshotShard, "SnapshotShard"),
     (Manifest, "Manifest"),
+    (LedgerDay, "LedgerDay"),
     (Changepoint, "Changepoint"),
     (WithinStat, "WithinStat"),
 ]

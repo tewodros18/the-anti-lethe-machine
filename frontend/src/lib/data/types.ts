@@ -223,6 +223,14 @@ export interface LedgerHead {
 	merkle_root: string;
 }
 
+/** One day of the hash chain: the root a snapshot's SHA-256 is a leaf of. */
+export interface LedgerDay {
+	day: string;
+	row_count: number;
+	merkle_root: string;
+	prev_root: string | null;
+}
+
 export interface Manifest {
 	schema_version: 1;
 	generated_at: string;
@@ -232,6 +240,8 @@ export interface Manifest {
 	/** Methods with a full index in this build; the first is index.json. */
 	methods_exported: string[];
 	ledger_head: LedgerHead | null;
+	/** Every ledger day, oldest first. */
+	ledger: LedgerDay[];
 	row_count: number;
 	shard_bytes: Record<string, number>;
 }

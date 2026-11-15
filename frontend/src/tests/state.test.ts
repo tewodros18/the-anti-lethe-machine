@@ -67,6 +67,7 @@ const manifest = {
 	methods_installed: [],
 	methods_exported: ['cosine_bow', 'ncd', 'embedding'],
 	ledger_head: null,
+	ledger: [],
 	row_count: 1,
 	shard_bytes: {}
 };

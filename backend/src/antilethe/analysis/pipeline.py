@@ -33,6 +33,7 @@ from ..models import (
     Index,
     InstabilityCell,
     InstalledMethod,
+    LedgerDay,
     LedgerHead,
     Manifest,
     MethodRef,
@@ -1129,6 +1130,12 @@ def build_manifest(
     head_row = conn.execute(
         "SELECT day, merkle_root FROM ledger ORDER BY day DESC LIMIT 1"
     ).fetchone()
+    ledger_days = [
+        LedgerDay(day=str(r[0]), row_count=int(r[1]), merkle_root=str(r[2]), prev_root=_opt(r[3]))
+        for r in conn.execute(
+            "SELECT day, row_count, merkle_root, prev_root FROM ledger ORDER BY day"
+        )
+    ]
 
     def checkpoint(name: str) -> str | None:
         """Which model a model-backed method is configured to use."""
@@ -1152,6 +1159,7 @@ def build_manifest(
             if head_row is None
             else LedgerHead(day=str(head_row[0]), merkle_root=str(head_row[1]))
         ),
+        ledger=ledger_days,
         row_count=store.row_count(conn),
         shard_bytes=shard_bytes,
     )

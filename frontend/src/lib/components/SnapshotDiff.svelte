@@ -12,8 +12,8 @@
 <script lang="ts">
 	import DiffText from './DiffText.svelte';
 	import { changeFraction, wordDiff } from '$lib/data/diff';
-	import { EM_DASH, fmt, fmtMs, fmtPct, longDay } from '$lib/data/format';
-	import type { Snapshot, Stratum } from '$lib/data/types';
+	import { EM_DASH, fmt, fmtInt, fmtMs, fmtPct, longDay } from '$lib/data/format';
+	import type { LedgerDay, Snapshot, Stratum } from '$lib/data/types';
 
 	interface Props {
 		questionText: string;
@@ -22,9 +22,11 @@
 		dayB: string;
 		a: Snapshot | null;
 		b: Snapshot | null;
+		/** The hash chain by day, when the build's manifest carries it. */
+		ledger?: Record<string, LedgerDay>;
 	}
 
-	let { questionText, modelId, dayA, dayB, a, b }: Props = $props();
+	let { questionText, modelId, dayA, dayB, a, b, ledger = {} }: Props = $props();
 
 	const tokens = $derived(wordDiff(a?.text ?? '', b?.text ?? ''));
 	const changed = $derived(changeFraction(tokens));
@@ -103,6 +105,17 @@
 	{/if}
 </div>
 
+{#if ledger[dayA] || ledger[dayB]}
+	<p class="verify">
+		Each day's root is the Merkle root over the sorted SHA-256 of every answer archived that day,
+		chained to the previous day's root. The hash shown in each pane is one of those leaves. To check
+		a day yourself, restore the archive from the release and run
+		<code>antilethe verify --day {dayA}</code>: it recomputes the root from the stored rows and
+		exits non-zero if anything was altered. The ledger proves a record has not changed since it was
+		fetched; it cannot prove which model produced it.
+	</p>
+{/if}
+
 <div class="panes">
 	{#each [{ snap: a, day: dayA, side: 'before' as const }, { snap: b, day: dayB, side: 'after' as const }] as pane (pane.day)}
 		<article class="pane">
@@ -161,6 +174,12 @@
 						<dt>SHA-256 of full answer</dt>
 						<dd class="hash">{pane.snap?.sha256 ?? EM_DASH}</dd>
 					</div>
+					{#if ledger[pane.day]}
+						<div class="full">
+							<dt>Day's Merkle root, {fmtInt(ledger[pane.day]?.row_count ?? null)} leaves</dt>
+							<dd class="hash">{ledger[pane.day]?.merkle_root}</dd>
+						</div>
+					{/if}
 				</dl>
 			</header>
 			{#if pane.snap}
@@ -355,5 +374,16 @@
 	.cn {
 		color: var(--ink-3);
 		font-size: 0.72rem;
+	}
+
+	.verify {
+		font-size: 0.8rem;
+		color: var(--ink-2);
+		margin: 0 0 0.9rem;
+	}
+
+	.verify code {
+		font-family: var(--font-mono);
+		font-size: 0.78rem;
 	}
 </style>

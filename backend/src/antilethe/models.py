@@ -612,6 +612,21 @@ class LedgerHead(Strict):
     merkle_root: str
 
 
+class LedgerDay(Strict):
+    """One day of the hash chain, as published so a reader can check a snapshot.
+
+    ``merkle_root`` is over the sorted SHA-256 of every answer archived that
+    day, ``row_count`` is how many leaves that is, and ``prev_root`` chains the
+    day to the one before it. ``antilethe verify --day DAY`` recomputes the
+    root from the stored rows.
+    """
+
+    day: str
+    row_count: int
+    merkle_root: str
+    prev_root: str | None
+
+
 class Manifest(Strict):
     """``manifest.json`` — build provenance."""
 
@@ -625,6 +640,9 @@ class Manifest(Strict):
     #: can show the same decomposition under each measure.
     methods_exported: list[str]
     ledger_head: LedgerHead | None
+    #: Every ledger day, oldest first, so the site can show the root a
+    #: snapshot's hash is a leaf of. Small: one short record per archived day.
+    ledger: list[LedgerDay] = Field(default_factory=list)
     row_count: int
     shard_bytes: dict[str, int]
 

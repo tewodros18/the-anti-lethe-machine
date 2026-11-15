@@ -6,7 +6,7 @@
 	import Plate from '$lib/components/Plate.svelte';
 	import SnapshotDiff from '$lib/components/SnapshotDiff.svelte';
 	import { dataset } from '$lib/state/dataset.svelte';
-	import type { Snapshot, SnapshotShard } from '$lib/data/types';
+	import type { LedgerDay, Snapshot, SnapshotShard } from '$lib/data/types';
 
 	const index = $derived(dataset.index);
 
@@ -58,6 +58,13 @@
 
 	/** Days the export kept for the selected question. */
 	const days = $derived(question ? (index?.snapshot_days[question] ?? []) : []);
+
+	/** The hash chain keyed by day, for the roots shown beside each snapshot. */
+	const ledgerByDay = $derived.by<Record<string, LedgerDay>>(() => {
+		const out: Record<string, LedgerDay> = {};
+		for (const entry of dataset.manifest?.ledger ?? []) out[entry.day] = entry;
+		return out;
+	});
 
 	/** Load the shard whenever the question changes. */
 	$effect(() => {
@@ -199,7 +206,15 @@
 					No snapshots were kept for this model on this question. Pick another model.
 				</p>
 			{:else}
-				<SnapshotDiff {questionText} modelId={model} {dayA} {dayB} a={snapA} b={snapB} />
+				<SnapshotDiff
+					{questionText}
+					modelId={model}
+					{dayA}
+					{dayB}
+					a={snapA}
+					b={snapB}
+					ledger={ledgerByDay}
+				/>
 			{/if}
 		</Plate>
 
