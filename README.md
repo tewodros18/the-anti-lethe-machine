@@ -346,6 +346,48 @@ uv pip install --reinstall-package torch "torch>=2.14,<2.15" \
   --extra-index-url https://download.pytorch.org/whl/cu126
 ```
 
+### On a rented GPU: the job image
+
+A laptop GPU does the full-archive DeBERTa passes in about eight hours; an A100
+or a 4090 does them in well under one. The repository therefore ships the
+model-backed passes as a self-contained job container, built by the
+`gpu-image` workflow and published to `ghcr.io/<owner>/<repo>/gpu:latest`.
+One run of the container does everything: download the archive seed from the
+`archive` release, run the requested `analyze` steps on the GPU, verify the
+ledger, gzip the archive and upload it back to the release (replacing the
+asset), then, on RunPod, terminate its own pod so billing stops. Nothing is
+installed on the box and nothing has to be copied by hand; the `pipeline`
+workflow picks the new seed up on its next run with an empty cache, and a
+developer machine gets it with `gh release download archive`.
+
+```bash
+# anywhere with Docker and an NVIDIA GPU
+docker run --rm --gpus all   -e GH_TOKEN=<token with repo scope>   -e GITHUB_REPOSITORY=<owner>/<repo>   ghcr.io/<owner>/<repo>/gpu:latest
+```
+
+On RunPod: *Deploy a Pod → GPU (an A40 or a 4090 is plenty; 50 GB of disk) →
+Edit template → Container image* `ghcr.io/<owner>/<repo>/gpu:latest`, and
+under *Environment variables* set `GH_TOKEN`, `GITHUB_REPOSITORY` and, so the
+pod shuts itself down when finished, `RUNPOD_API_KEY` (`RUNPOD_POD_ID` is set
+by RunPod). The container has no web endpoint; it is a batch job whose result
+is the release asset, and its progress is the pod's log. If the GHCR package
+is private, make it public (it holds only this repository's code) or give the
+template registry credentials.
+
+| variable | default | meaning |
+|---|---|---|
+| `GH_TOKEN` | required | reads the seed release, writes the result asset |
+| `GITHUB_REPOSITORY` | `tewodros18/the-anti-lethe-machine` | which repository's releases |
+| `SEED_TAG` / `RESULT_TAG` | `archive` / same as seed | where the archive comes from and goes to |
+| `ANALYZE_STEPS` | `nli;stance_nli --rebuild` | `;`-separated `analyze --methods` argument lists, run in order |
+| `ANTILETHE_*` | embedding model `bge-small`, batch sizes 128 / 64 | any pipeline setting |
+
+The default steps finish an interrupted `nli` pass incrementally and rebuild
+`stance_nli` under the DeBERTa default, which is the state the published seed
+was left in. Give `ANALYZE_STEPS` the value `embedding,embedding_map;nli
+--rebuild;stance_nli --rebuild` for a from-scratch recomputation of every
+model-backed measure.
+
 ### A method that needs the whole series
 
 Methods backed by a model should not encode two texts at a time. Register a

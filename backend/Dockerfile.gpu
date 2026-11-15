@@ -1,0 +1,40 @@
+# GPU job image for the model-backed measures (embedding, nli, stance_nli).
+#
+# One container run = download the archive seed from the GitHub release, run the
+# requested analyze steps on the GPU, verify the ledger, upload the archive back
+# to the release. Built by .github/workflows/gpu-image.yml and published to
+# ghcr.io/<owner>/<repo>/gpu; meant for a rented GPU (RunPod, Lambda, a lab box).
+#
+# Build context is the repository root:  docker build -f backend/Dockerfile.gpu .
+FROM nvidia/cuda:12.4.1-cudnn-runtime-ubuntu22.04
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    PYTHONUNBUFFERED=1 \
+    VIRTUAL_ENV=/opt/venv \
+    PATH=/opt/venv/bin:/root/.local/bin:$PATH \
+    HF_HOME=/root/.cache/huggingface
+
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends ca-certificates curl git gzip coreutils \
+ && curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+      -o /usr/share/keyrings/githubcli-archive-keyring.gpg \
+ && echo "deb [arch=amd64 signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
+      > /etc/apt/sources.list.d/github-cli.list \
+ && apt-get update && apt-get install -y --no-install-recommends gh \
+ && rm -rf /var/lib/apt/lists/*
+
+# uv manages the interpreter and the venv, same as on a developer machine.
+COPY --from=ghcr.io/astral-sh/uv:0.5.29 /uv /uvx /bin/
+RUN uv venv --python 3.12 "$VIRTUAL_ENV" \
+ && uv pip install --python "$VIRTUAL_ENV/bin/python" \
+      --index-url https://download.pytorch.org/whl/cu124 "torch>=2.5,<2.7"
+
+WORKDIR /app
+COPY backend ./backend
+RUN uv pip install --python "$VIRTUAL_ENV/bin/python" -e './backend[all]' \
+ && antilethe methods
+
+COPY backend/docker/gpu_job.sh /usr/local/bin/gpu_job
+RUN chmod +x /usr/local/bin/gpu_job
+WORKDIR /work
+ENTRYPOINT ["/usr/local/bin/gpu_job"]
