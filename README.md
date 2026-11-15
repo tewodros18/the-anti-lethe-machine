@@ -376,7 +376,7 @@ template registry credentials.
 
 | variable | default | meaning |
 |---|---|---|
-| `GH_TOKEN` | required | reads the seed release, writes the result asset |
+| `GH_TOKEN` | required | reads the seed release, writes the result asset. A fine-grained token needs **Contents: read and write** on the repository; the job checks this first with a throwaway asset and parks the result instead of looping if the token cannot write |
 | `GITHUB_REPOSITORY` | `tewodros18/the-anti-lethe-machine` | which repository's releases |
 | `SEED_TAG` / `RESULT_TAG` | `archive` / same as seed | where the archive comes from and goes to |
 | `ANALYZE_STEPS` | `nli;stance_nli --rebuild` | `;`-separated `analyze --methods` argument lists, run in order |
