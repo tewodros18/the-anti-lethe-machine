@@ -105,7 +105,7 @@
 					<a
 						class="cta"
 						href="https://github.com/tewodros18/the-anti-lethe-machine/releases/tag/archive"
-						>archive.db · {fmtInt(index.span.complete_days)} days</a
+						>archive.db · {fmtInt(index.span.days)} days</a
 					>
 					<a class="cta accent" href="{base}/method">how it is measured →</a>
 				</p>

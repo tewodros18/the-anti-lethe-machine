@@ -165,5 +165,24 @@ def test_last_ingest_reports_latest_success(conn: sqlite3.Connection) -> None:
 
 
 def test_complete_day_count(populated: sqlite3.Connection) -> None:
-    """Every fixture day has the same grid except the one with an extra error row."""
-    assert store.complete_day_count(populated) >= 1
+    """A day counts when its ingest finished and its rows are all still there."""
+    before = store.complete_day_count(populated)
+    assert before >= 1
+    # Losing a row from a finished day drops it from the count: the recorded
+    # ingest total no longer matches what is stored.
+    day = DAYS[0]
+    populated.execute(
+        "DELETE FROM responses WHERE rowid IN (SELECT rowid FROM responses WHERE day = ? LIMIT 1)",
+        (day,),
+    )
+    assert store.complete_day_count(populated) == before - 1
+
+
+def test_series_only_days_are_not_complete(conn: sqlite3.Connection) -> None:
+    """Rows reached through a question series carry no ingest record."""
+    rows = [RawResponse.from_api(r) for r in sample_day(DAYS[0])]
+    store.upsert_responses(conn, rows)
+    assert store.complete_day_count(conn) == 0
+    store.start_day(conn, DAYS[0])
+    store.finish_day(conn, DAYS[0], len(rows))
+    assert store.complete_day_count(conn) == 1

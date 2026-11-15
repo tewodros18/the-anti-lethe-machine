@@ -15,11 +15,6 @@ from pathlib import Path
 
 from ..models import ModelRow, Question, RawResponse
 
-#: A day counts as complete at or above this fraction of the fullest day's rows.
-#: Upstream drops a small number of generations most days, so requiring an exact
-#: match would report a well-covered archive as having no complete days at all.
-COMPLETE_DAY_TOLERANCE = 0.99
-
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS responses (
   id             TEXT PRIMARY KEY,
@@ -313,26 +308,26 @@ def last_ingest(conn: sqlite3.Connection) -> str | None:
 
 
 def complete_day_count(conn: sqlite3.Connection) -> int:
-    """Days whose row count equals the modal row count across all days.
+    """Days fetched whole and still whole.
 
-    A "complete" day is one whose row count is within ``COMPLETE_DAY_TOLERANCE``
-    of the fullest day in the archive. The fullest day is the best available
-    estimate of the full question x model grid, so a day measured against it is
-    either essentially fully covered or it is not.
-
-    Measuring against the *modal* count instead would be wrong for a partial
-    archive: ingesting a few question series deeply makes the typical day hold
-    only those questions, and every such day would then be reported as complete
-    when in truth almost none of the grid was captured. Partial days still
-    contribute transitions; they are just not counted as complete, so the span
-    is never overstated.
+    A day is complete when its ingest finished successfully and the number of
+    rows stored for it equals the number that ingest recorded, which is the
+    count upstream served. That is a statement about this archive against
+    upstream, not against other days: upstream's panel has grown from a few
+    hundred answers a day to nearly five thousand and shrunk again, so a day
+    cannot be judged by how it compares with the fullest day. A day that was
+    only ever reached through a question series has no ingest record and is
+    not complete, however many rows it holds, so a partial archive never
+    overstates its span.
     """
-    counts = [int(r[0]) for r in conn.execute("SELECT COUNT(*) FROM responses GROUP BY day")]
-    if not counts:
-        return 0
-    fullest = max(counts)
-    threshold = fullest * COMPLETE_DAY_TOLERANCE
-    return sum(1 for c in counts if c >= threshold)
+    row = conn.execute(
+        """
+        SELECT COUNT(*) FROM ingest_log l
+        WHERE l.status = 'ok'
+          AND l.rows = (SELECT COUNT(*) FROM responses r WHERE r.day = l.day)
+        """
+    ).fetchone()
+    return int(row[0]) if row else 0
 
 
 def questions(conn: sqlite3.Connection) -> list[Question]:

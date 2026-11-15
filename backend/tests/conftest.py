@@ -67,6 +67,7 @@ def ingested(conn: sqlite3.Connection, sample_payload: dict[str, Any]) -> sqlite
 
     for day in DAYS:
         rows = [RawResponse.from_api(r) for r in sample_day(day)]
+        store.start_day(conn, day)
         store.upsert_responses(conn, rows)
         ledger.append_day(conn, day, ledger.day_leaves(conn, day))
         store.finish_day(conn, day, len(rows))

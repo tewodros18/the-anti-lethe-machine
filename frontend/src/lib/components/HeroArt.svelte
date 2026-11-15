@@ -44,7 +44,7 @@
 
 	.mound circle {
 		fill: var(--ink);
-		opacity: 0.34;
+		opacity: 0.28;
 	}
 
 	.mark line {
