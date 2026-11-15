@@ -104,7 +104,8 @@ fi
 for old in $(gh release view "$RESULT_TAG" --repo "$REPO" --json assets -q '.assets[].name' | grep -E '^archive\.db'); do
   gh release delete-asset "$RESULT_TAG" "$old" --repo "$REPO" --yes || true
 done
-gh release upload "$RESULT_TAG" "${assets[@]}" data/archive.db.gz.sha256 --repo "$REPO" --clobber \n  || park_and_wait "upload to $REPO@$RESULT_TAG failed"
+gh release upload "$RESULT_TAG" "${assets[@]}" data/archive.db.gz.sha256 --repo "$REPO" --clobber \
+  || park_and_wait "upload to $REPO@$RESULT_TAG failed"
 stamp "uploaded $(printf '%s ' "${assets[@]##*/}")"
 
 if [ -n "${RUNPOD_API_KEY:-}" ] && [ -n "${RUNPOD_POD_ID:-}" ]; then
