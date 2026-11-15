@@ -25,7 +25,39 @@ export ANTILETHE_NLI_BATCH_SIZE="${ANTILETHE_NLI_BATCH_SIZE:-64}"
 
 stamp() { printf '=== %s  %s\n' "$1" "$(date -u +%FT%TZ)"; }
 
+# A failure after the GPU work must not throw the result away. RunPod restarts
+# a container whose command exits, which would rerun the whole job and, with
+# the same cause, fail the same way; so on failure the result is parked under
+# /work/result and the container idles, holding it for retrieval by exec or
+# SSH, and the operator stops the pod.
+park_and_wait() {
+  stamp "FAILED: $1"
+  if [ -f data/archive.db.gz ]; then
+    mkdir -p /work/result && cp data/archive.db.gz data/archive.db.gz.sha256 /work/result/ 2>/dev/null || true
+    stamp "result parked at /work/result (upload it with a token that can write releases, then stop the pod)"
+  fi
+  stamp "idling; stop or terminate the pod when the result has been retrieved"
+  while true; do sleep 3600; done
+}
+
 stamp "gpu job start"
+
+# Preflight the token before spending GPU hours: it must be able to create and
+# delete release assets, which a read-only or fine-grained token without
+# contents: read and write cannot. A tiny probe asset is uploaded and removed.
+stamp "preflight: release write access on $REPO@$RESULT_TAG"
+probe="gpu-job-preflight-$(date -u +%s).txt"
+printf 'preflight\n' > "/tmp/$probe"
+if gh release view "$RESULT_TAG" --repo "$REPO" >/dev/null 2>&1; then
+  gh release upload "$RESULT_TAG" "/tmp/$probe" --repo "$REPO" >/dev/null 2>&1 \
+    || park_and_wait "GH_TOKEN cannot upload release assets to $REPO@$RESULT_TAG (it needs contents: read and write)"
+  gh release delete-asset "$RESULT_TAG" "$probe" --repo "$REPO" --yes >/dev/null 2>&1 \
+    || park_and_wait "GH_TOKEN can upload but not delete release assets on $REPO; replacing the seed needs both"
+  stamp "preflight ok"
+else
+  stamp "preflight: release $RESULT_TAG does not exist yet; it will be created at upload"
+fi
+rm -f "/tmp/$probe"
 nvidia-smi --query-gpu=name,memory.total --format=csv,noheader || echo "no GPU visible; this will be slow"
 python -c "import torch; print('torch', torch.__version__, 'cuda', torch.cuda.is_available())"
 
@@ -72,7 +104,7 @@ fi
 for old in $(gh release view "$RESULT_TAG" --repo "$REPO" --json assets -q '.assets[].name' | grep -E '^archive\.db'); do
   gh release delete-asset "$RESULT_TAG" "$old" --repo "$REPO" --yes || true
 done
-gh release upload "$RESULT_TAG" "${assets[@]}" data/archive.db.gz.sha256 --repo "$REPO" --clobber
+gh release upload "$RESULT_TAG" "${assets[@]}" data/archive.db.gz.sha256 --repo "$REPO" --clobber \n  || park_and_wait "upload to $REPO@$RESULT_TAG failed"
 stamp "uploaded $(printf '%s ' "${assets[@]##*/}")"
 
 if [ -n "${RUNPOD_API_KEY:-}" ] && [ -n "${RUNPOD_POD_ID:-}" ]; then
