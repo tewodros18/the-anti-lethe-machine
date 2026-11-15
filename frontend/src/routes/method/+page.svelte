@@ -61,6 +61,25 @@
 				'cased. A model that became more consistent on these specific questions has not ' +
 				'necessarily become more consistent in general, and this register cannot tell the ' +
 				'difference between the two.'
+		},
+		{
+			title: 'The questions are the Internet Archive’s, not a curated benchmark',
+			body:
+				'The panel of questions and models is chosen and run by the Internet Archive’s Ask Me ' +
+				'Twice project. This register did not design it, cannot add to it, and inherits its ' +
+				'gaps: the panel shrank from about thirty-seven models a day to ten to fifteen at the ' +
+				'end of October 2026, and the rotating models have multi-day gaps that are excluded from ' +
+				'the noise floor. The upside is independence: no one running this register picked the ' +
+				'questions a model is judged on.'
+		},
+		{
+			title: 'A register, not a probe',
+			body:
+				'Nothing here sends a question to a model. Every answer was generated and archived ' +
+				'upstream on the day shown, and this site only reads that archive. That is what makes ' +
+				'the record independent of whoever runs the site, and it is also why there is no button ' +
+				'to ask a model the question now: a live answer would have no archived counterpart to ' +
+				'be checked against, and no ledger entry.'
 		}
 	];
 </script>
@@ -225,7 +244,7 @@
 
 		<Plate
 			title="Limitations"
-			note="These are the six things this register cannot tell you. They are not caveats on the numbers; they are the boundary of what the numbers mean."
+			note="These are the eight things this register cannot tell you. They are not caveats on the numbers; they are the boundary of what the numbers mean."
 		>
 			<ol class="limits">
 				{#each LIMITATIONS as limitation (limitation.title)}

@@ -2,6 +2,7 @@
 	import { replaceState } from '$app/navigation';
 	import { page } from '$app/state';
 	import Trajectory from '$lib/charts/Trajectory.svelte';
+	import StanceTimeline from '$lib/charts/StanceTimeline.svelte';
 	import DatasetGate from '$lib/components/DatasetGate.svelte';
 	import Plate from '$lib/components/Plate.svelte';
 	import SnapshotDiff from '$lib/components/SnapshotDiff.svelte';
@@ -92,6 +93,14 @@
 	const modelDays = $derived.by(() => {
 		if (!shard || !model) return [];
 		return Object.keys(shard.models[model] ?? {}).sort();
+	});
+
+	/** Whether any kept snapshot of this model carries the stance probe. */
+	const hasStance = $derived.by(() => {
+		if (!shard || !model) return false;
+		return Object.values(shard.models[model] ?? {}).some(
+			(snap) => snap.features.stance_yes !== undefined
+		);
 	});
 
 	/**
@@ -217,6 +226,16 @@
 				/>
 			{/if}
 		</Plate>
+
+		{#if shard && modelDays.length > 0 && hasStance}
+			<Plate
+				title="Where the model stands"
+				subtitle="This model's position on this question, day by day, under the stance probe"
+				note="Each archived answer is scored by the entailment model against three fixed hypotheses: that the answer says yes, that it says no, and that it declines to take a position. The three lines are those probabilities on the days the export kept; a gap is a day not kept, not an answer that was missing. The ringed points are the two days compared above. A rewording leaves the lines where they were; a reversal swaps the yes and no lines. This is drawn only when the build ran the stance_nli method, and the checkpoint it ran is named on the method page."
+			>
+				<StanceTimeline snapshots={shard.models[model] ?? {}} {dayA} {dayB} />
+			</Plate>
+		{/if}
 
 		{#if shard && modelDays.length > 0}
 			<Plate
