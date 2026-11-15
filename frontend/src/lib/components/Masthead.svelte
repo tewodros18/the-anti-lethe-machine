@@ -1,6 +1,8 @@
 <!--
 	@component
-	The fixed masthead: title, navigation, theme switch.
+	The masthead: a mark and wordmark, the section index, the measure switch and
+	the theme switch. Set in the monospace face like a directory listing, with
+	the active section underlined in the accent.
 -->
 <script lang="ts">
 	import { base } from '$app/paths';
@@ -23,10 +25,10 @@
 	}
 
 	const LINKS = [
-		{ href: '/', label: 'Register' },
-		{ href: '/models', label: 'Models' },
-		{ href: '/compare', label: 'Compare' },
-		{ href: '/method', label: 'Method' }
+		{ href: '/', label: 'register' },
+		{ href: '/models', label: 'models' },
+		{ href: '/compare', label: 'compare' },
+		{ href: '/method', label: 'method' }
 	];
 
 	/** Current route, normalised so `base` does not affect matching. */
@@ -36,8 +38,8 @@
 <header class="masthead">
 	<div class="inner">
 		<a class="brand" href="{base}/">
-			<span class="wordmark">Anti&#8209;Lethe</span>
-			<span class="tagline">a drift register for model behaviour</span>
+			<span class="mark" aria-hidden="true"></span>
+			<span class="wordmark">ANTI-LETHE</span>
 		</a>
 
 		<nav aria-label="Sections">
@@ -46,31 +48,34 @@
 					<li>
 						<a
 							href="{base}{link.href === '/' ? '/' : link.href}"
-							aria-current={current === link.href ? 'page' : undefined}>{link.label}</a
+							aria-current={current === link.href ? 'page' : undefined}
+							><span class="slash">/</span>{link.label}</a
 						>
 					</li>
 				{/each}
 			</ul>
 		</nav>
 
-		{#if dataset.methods.length > 1}
-			<div class="measure">
-				<label for="measure">Measure</label>
-				<select
-					id="measure"
-					value={dataset.method ?? ''}
-					disabled={dataset.switching}
-					onchange={(event) =>
-						dataset.selectMethod((event.currentTarget as HTMLSelectElement).value)}
-				>
-					{#each dataset.methods as name (name)}
-						<option value={name}>{describe(name)}</option>
-					{/each}
-				</select>
-			</div>
-		{/if}
+		<div class="tools">
+			{#if dataset.methods.length > 1}
+				<div class="measure">
+					<label for="measure">Measure</label>
+					<select
+						id="measure"
+						value={dataset.method ?? ''}
+						disabled={dataset.switching}
+						onchange={(event) =>
+							dataset.selectMethod((event.currentTarget as HTMLSelectElement).value)}
+					>
+						{#each dataset.methods as name (name)}
+							<option value={name}>{describe(name)}</option>
+						{/each}
+					</select>
+				</div>
+			{/if}
 
-		<ThemeToggle />
+			<ThemeToggle />
+		</div>
 	</div>
 </header>
 
@@ -79,42 +84,43 @@
 		position: sticky;
 		top: 0;
 		z-index: 20;
-		background: color-mix(in srgb, var(--paper) 92%, transparent);
+		background: color-mix(in srgb, var(--paper) 90%, transparent);
 		backdrop-filter: blur(8px);
-		border-bottom: 1px solid var(--rule);
 	}
 
 	.inner {
 		max-width: var(--plate-max);
 		margin: 0 auto;
-		padding: 0.55rem var(--gutter);
+		padding: 0.9rem var(--gutter) 0.7rem;
 		display: flex;
 		align-items: center;
-		gap: 0.9rem 1.4rem;
+		gap: 0.7rem 1.6rem;
 		flex-wrap: wrap;
+		border-bottom: 1px solid var(--rule-2);
 	}
 
 	.brand {
 		text-decoration: none;
 		color: inherit;
 		display: flex;
-		flex-direction: column;
+		align-items: center;
+		gap: 0.55em;
 		min-width: 0;
 	}
 
-	.wordmark {
-		font-family: var(--font-display);
-		font-size: 1.14rem;
-		font-weight: 600;
-		letter-spacing: -0.015em;
-		line-height: 1.1;
+	.mark {
+		width: 0.8em;
+		height: 0.8em;
+		border-radius: 50%;
+		background: var(--accent);
+		box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
 	}
 
-	.tagline {
+	.wordmark {
 		font-family: var(--font-mono);
-		font-size: 0.6rem;
-		color: var(--ink-3);
-		letter-spacing: 0.02em;
+		font-weight: 500;
+		font-size: 0.86rem;
+		letter-spacing: 0.12em;
 	}
 
 	nav {
@@ -123,7 +129,7 @@
 
 	nav ul {
 		display: flex;
-		gap: 0.15rem;
+		gap: 0.2rem 1.1rem;
 		list-style: none;
 		margin: 0;
 		padding: 0;
@@ -131,24 +137,36 @@
 
 	nav a {
 		display: block;
-		padding: 0.3em 0.55em;
+		padding: 0.2em 0;
 		color: var(--ink-2);
 		text-decoration: none;
 		font-family: var(--font-mono);
-		font-size: 0.76rem;
-		border-radius: var(--radius);
-		border: 1px solid transparent;
+		font-size: 0.8rem;
+		letter-spacing: 0.01em;
+		border-bottom: 1.5px solid transparent;
+	}
+
+	.slash {
+		color: var(--ink-3);
 	}
 
 	nav a:hover {
 		color: var(--ink);
-		border-color: var(--rule-2);
 	}
 
 	nav a[aria-current='page'] {
-		color: var(--ink);
-		background: var(--plate);
-		border-color: var(--rule-2);
+		color: var(--accent);
+		border-bottom-color: var(--accent);
+	}
+
+	nav a[aria-current='page'] .slash {
+		color: var(--accent);
+	}
+
+	.tools {
+		display: flex;
+		align-items: center;
+		gap: 0.8rem;
 	}
 
 	.measure {
@@ -167,7 +185,7 @@
 		padding: 0.25em 0.4em;
 	}
 
-	@media (max-width: 560px) {
+	@media (max-width: 640px) {
 		nav {
 			margin-left: 0;
 			order: 3;
@@ -176,6 +194,10 @@
 
 		nav ul {
 			flex-wrap: wrap;
+		}
+
+		.tools {
+			margin-left: auto;
 		}
 	}
 </style>

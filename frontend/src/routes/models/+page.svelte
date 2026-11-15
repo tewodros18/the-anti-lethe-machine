@@ -73,7 +73,7 @@
 
 <DatasetGate>
 	{#if index}
-		<h1>Models</h1>
+		<h1>Models<span class="stop">.</span></h1>
 		<p class="lede">
 			How each model behaves, and how much of its day-to-day movement is explained by the
 			infrastructure underneath it rather than by the model.

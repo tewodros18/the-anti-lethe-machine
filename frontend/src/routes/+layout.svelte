@@ -30,9 +30,12 @@
 			not of models directly.
 		</p>
 		<p class="links">
-			<a href="https://github.com/anti-lethe/anti-lethe">Source</a>
+			<a href="https://github.com/tewodros18/the-anti-lethe-machine">Source</a>
 			<span aria-hidden="true">·</span>
-			<a href="https://github.com/anti-lethe/anti-lethe/blob/main/LICENSE">MIT</a>
+			<a href="https://github.com/tewodros18/the-anti-lethe-machine/releases/tag/archive">Archive</a
+			>
+			<span aria-hidden="true">·</span>
+			<a href="https://github.com/tewodros18/the-anti-lethe-machine/blob/main/LICENSE">MIT</a>
 		</p>
 	</div>
 </footer>
@@ -60,7 +63,7 @@
 	}
 
 	footer {
-		border-top: 1px solid var(--rule);
+		border-top: 1px dashed var(--rule-2);
 		margin-top: 2rem;
 	}
 

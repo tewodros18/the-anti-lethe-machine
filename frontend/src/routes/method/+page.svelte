@@ -90,7 +90,7 @@
 
 <DatasetGate>
 	{#if index}
-		<h1>Method</h1>
+		<h1>Method<span class="stop">.</span></h1>
 		<p class="lede">What is measured, how, and what the measurement cannot tell you.</p>
 
 		<Plate

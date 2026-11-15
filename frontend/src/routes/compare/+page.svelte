@@ -159,7 +159,7 @@
 
 <DatasetGate>
 	{#if index}
-		<h1>Compare two days</h1>
+		<h1>Compare two days<span class="stop">.</span></h1>
 		<p class="lede">
 			The same question, the same model, two different days. What the differences mean depends
 			entirely on whether the build and the host stayed the same, so that verdict is stated before

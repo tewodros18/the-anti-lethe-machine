@@ -9,16 +9,18 @@
 :root {
 	color-scheme: light;
 
-	--paper: #eef1f3;
-	--plate: #fbfcfd;
-	--sunk: #e3e8eb;
-	--ink: #121a20;
-	--ink-2: #4a5a66;
-	--ink-3: #7b8b97;
-	--rule: #d0d8dd;
-	--rule-2: #bcc7ce;
-	--band: #c8d4da;
-	--accent: #17556f;
+	/* Warm paper, not screen grey: the texture below only reads on a ground
+	   with a little yellow in it. */
+	--paper: #f2f0e9;
+	--plate: #faf9f4;
+	--sunk: #e9e6dc;
+	--ink: #16191c;
+	--ink-2: #4b5157;
+	--ink-3: #7c8389;
+	--rule: #d8d4c8;
+	--rule-2: #c2bdb0;
+	--band: #d6d9d2;
+	--accent: #1d6fb8;
 
 	/* Categorical series. Validated for lightness band, chroma floor,
 	   colour-vision-deficiency separation and contrast. Fixed order; there is
@@ -39,7 +41,7 @@
 	   entirely. Kept low because the register's smallest labels are 0.6rem
 	   monospace, and texture over type costs contrast before it costs anything
 	   else. */
-	--grain-opacity: 0.15;
+	--grain-opacity: 0.28;
 
 	--font-display: 'Newsreader', ui-serif, Georgia, 'Times New Roman', serif;
 	--font-body: 'IBM Plex Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
@@ -78,7 +80,7 @@
 		--critical: #d1685f;
 
 		/* Bright noise reads louder against a dark ground, so it is dialled back. */
-		--grain-opacity: 0.09;
+		--grain-opacity: 0.14;
 	}
 }
 
@@ -108,7 +110,7 @@
 	--critical: #d1685f;
 
 	/* Bright noise reads louder against a dark ground, so it is dialled back. */
-	--grain-opacity: 0.09;
+	--grain-opacity: 0.14;
 }
 
 /* ========================================================================== */
@@ -181,11 +183,53 @@ h4 {
 }
 
 h1 {
-	font-size: clamp(1.75rem, 1.2rem + 2.2vw, 2.6rem);
-	font-weight: 600;
+	font-size: clamp(2rem, 1.3rem + 2.6vw, 3rem);
+	font-weight: 500;
+	letter-spacing: -0.02em;
 }
 h2 {
-	font-size: clamp(1.25rem, 1.05rem + 0.8vw, 1.6rem);
+	font-size: clamp(1.3rem, 1.05rem + 0.9vw, 1.7rem);
+}
+
+/* The accent full stop that closes a display title. */
+.stop {
+	color: var(--accent);
+}
+
+/* A bordered monospace link, for calls to action. */
+.cta {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5em;
+	padding: 0.5em 0.9em;
+	border: 1px solid var(--ink);
+	border-radius: 2px;
+	background: var(--plate);
+	color: var(--ink);
+	font-family: var(--font-mono);
+	font-size: 0.8rem;
+	text-decoration: none;
+	transition:
+		background 0.12s ease,
+		border-color 0.12s ease;
+}
+
+.cta:hover {
+	background: var(--sunk);
+	border-color: var(--accent);
+	text-decoration: none;
+}
+
+.cta.accent {
+	border-color: var(--accent);
+	color: var(--accent);
+}
+
+/* A dashed hairline between sections. */
+.rule-dashed {
+	border: 0;
+	border-top: 1px dashed var(--rule-2);
+	margin: 1.4rem 0;
 }
 h3 {
 	font-size: 1.1rem;
@@ -303,8 +347,8 @@ table {
 th,
 td {
 	text-align: right;
-	padding: 0.4em 0.55em;
-	border-bottom: 1px solid var(--rule);
+	padding: 0.5em 0.6em;
+	border-bottom: 1px dashed var(--rule);
 	white-space: nowrap;
 }
 
