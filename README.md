@@ -383,10 +383,11 @@ template registry credentials.
 | `ANTILETHE_*` | embedding model `bge-small`, batch sizes 128 / 64 | any pipeline setting |
 
 The default steps finish an interrupted `nli` pass incrementally and rebuild
-`stance_nli` under the DeBERTa default, which is the state the published seed
-was left in. Give `ANALYZE_STEPS` the value `embedding,embedding_map;nli
---rebuild;stance_nli --rebuild` for a from-scratch recomputation of every
-model-backed measure.
+`stance_nli` under the DeBERTa default. The published seed was produced this
+way on a rented A40 and has every model-backed measure complete, so running
+the job against it only matters once new days have been ingested. Give
+`ANALYZE_STEPS` the value `embedding,embedding_map;nli --rebuild;stance_nli
+--rebuild` for a from-scratch recomputation of every model-backed measure.
 
 ### A method that needs the whole series
 
