@@ -210,13 +210,16 @@
 	}
 
 	/* Stretches to the height of the text column, so there is never a band of
-	   empty paper above and below the drawing when the text wraps taller. */
+	   empty paper above and below the drawing when the text wraps taller, and
+	   runs through the hero's own padding so the field meets the masthead rule
+	   above and the dashed rule below. */
 	.art {
 		justify-self: end;
 		align-self: stretch;
 		width: 100%;
 		max-width: 560px;
 		min-height: 320px;
+		margin: -2.4rem 0 -1.6rem;
 		color: var(--ink);
 	}
 
@@ -252,6 +255,7 @@
 			align-self: auto;
 			max-width: 460px;
 			min-height: 0;
+			margin: 0;
 			aspect-ratio: 14 / 9;
 		}
 	}

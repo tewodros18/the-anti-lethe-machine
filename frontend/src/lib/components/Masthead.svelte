@@ -48,8 +48,7 @@
 					<li>
 						<a
 							href="{base}{link.href === '/' ? '/' : link.href}"
-							aria-current={current === link.href ? 'page' : undefined}
-							><span class="slash">/</span>{link.label}</a
+							aria-current={current === link.href ? 'page' : undefined}>{link.label}</a
 						>
 					</li>
 				{/each}
@@ -146,10 +145,6 @@
 		border-bottom: 1.5px solid transparent;
 	}
 
-	.slash {
-		color: var(--ink-3);
-	}
-
 	nav a:hover {
 		color: var(--ink);
 	}
@@ -157,10 +152,6 @@
 	nav a[aria-current='page'] {
 		color: var(--accent);
 		border-bottom-color: var(--accent);
-	}
-
-	nav a[aria-current='page'] .slash {
-		color: var(--accent);
 	}
 
 	.tools {
