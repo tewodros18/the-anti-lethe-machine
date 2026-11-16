@@ -117,7 +117,9 @@
 {/if}
 
 <div class="panes">
-	{#each [{ snap: a, day: dayA, side: 'before' as const }, { snap: b, day: dayB, side: 'after' as const }] as pane (pane.day)}
+	<!-- Keyed by side, never by day: the two days are equal while the pair is
+	     still being chosen, and a duplicate key would throw. -->
+	{#each [{ snap: a, day: dayA, side: 'before' as const }, { snap: b, day: dayB, side: 'after' as const }] as pane (pane.side)}
 		<article class="pane">
 			<header>
 				<h4>{longDay(pane.day)}</h4>
