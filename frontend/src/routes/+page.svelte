@@ -209,10 +209,14 @@
 		max-width: none;
 	}
 
+	/* Stretches to the height of the text column, so there is never a band of
+	   empty paper above and below the drawing when the text wraps taller. */
 	.art {
 		justify-self: end;
-		max-width: 520px;
+		align-self: stretch;
 		width: 100%;
+		max-width: 560px;
+		min-height: 320px;
 		color: var(--ink);
 	}
 
@@ -245,7 +249,10 @@
 
 		.art {
 			justify-self: center;
-			max-width: 420px;
+			align-self: auto;
+			max-width: 460px;
+			min-height: 0;
+			aspect-ratio: 14 / 9;
 		}
 	}
 </style>

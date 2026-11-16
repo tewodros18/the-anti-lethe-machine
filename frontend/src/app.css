@@ -9,18 +9,19 @@
 :root {
 	color-scheme: light;
 
-	/* Warm paper, not screen grey: the texture below only reads on a ground
-	   with a little yellow in it. */
-	--paper: #f2f0e9;
-	--plate: #faf9f4;
-	--sunk: #e9e6dc;
-	--ink: #16191c;
-	--ink-2: #4b5157;
-	--ink-3: #7c8389;
-	--rule: #d8d4c8;
-	--rule-2: #c2bdb0;
-	--band: #d6d9d2;
-	--accent: #1d6fb8;
+	/* Cool stone paper, not screen grey and not cream: a ground with a little
+	   green in it, which the texture below reads on and the viridian accent
+	   sits in. */
+	--paper: #e9ebe6;
+	--plate: #f4f5f1;
+	--sunk: #dde1da;
+	--ink: #151918;
+	--ink-2: #485250;
+	--ink-3: #74807d;
+	--rule: #cdd2cb;
+	--rule-2: #b3bbb3;
+	--band: #c9d1ca;
+	--accent: #0f6e66;
 
 	/* Categorical series. Validated for lightness band, chroma floor,
 	   colour-vision-deficiency separation and contrast. Fixed order; there is
@@ -57,16 +58,16 @@
 	:root:not([data-theme='light']) {
 		color-scheme: dark;
 
-		--paper: #0e1418;
-		--plate: #151d23;
-		--sunk: #1b242b;
-		--ink: #e2e9ee;
-		--ink-2: #9aabb6;
-		--ink-3: #6c7d89;
-		--rule: #253139;
-		--rule-2: #33434d;
-		--band: #2b3a44;
-		--accent: #74b9d6;
+		--paper: #0f1513;
+		--plate: #161e1b;
+		--sunk: #1c2623;
+		--ink: #e4eae6;
+		--ink-2: #a0aba6;
+		--ink-3: #6f7b76;
+		--rule: #27322e;
+		--rule-2: #35423d;
+		--band: #2e3c37;
+		--accent: #62c4b5;
 
 		--c1: #2e93be;
 		--c2: #d96e33;
@@ -87,16 +88,16 @@
 :root[data-theme='dark'] {
 	color-scheme: dark;
 
-	--paper: #0e1418;
-	--plate: #151d23;
-	--sunk: #1b242b;
-	--ink: #e2e9ee;
-	--ink-2: #9aabb6;
-	--ink-3: #6c7d89;
-	--rule: #253139;
-	--rule-2: #33434d;
-	--band: #2b3a44;
-	--accent: #74b9d6;
+	--paper: #0f1513;
+	--plate: #161e1b;
+	--sunk: #1c2623;
+	--ink: #e4eae6;
+	--ink-2: #a0aba6;
+	--ink-3: #6f7b76;
+	--rule: #27322e;
+	--rule-2: #35423d;
+	--band: #2e3c37;
+	--accent: #62c4b5;
 
 	--c1: #2e93be;
 	--c2: #d96e33;

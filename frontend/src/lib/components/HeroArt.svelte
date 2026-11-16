@@ -1,61 +1,77 @@
 <!--
 	@component
-	The hero illustration: a mound of stippled dots with a survey mark planted on
-	its crest, a flag on a thin mast. A benchmark in the surveyor's sense, which
-	is what this register is: a fixed mark that later readings are measured
-	against. Drawn in the ink colour at low opacity so it sits in the paper
-	rather than on it, and it is decorative, so it is hidden from assistive
-	technology.
+	The hero illustration: a contour field. Rings nested around one fixed mark,
+	round at the centre and bending further out of true the further they sit
+	from it, which is the register's subject as a shape: a benchmark, and
+	readings that wander the longer they run. One ring is picked out in the
+	accent, the way a survey map picks out an index contour. Drawn as ink
+	hairlines at low opacity so it sits in the paper rather than on it, and it
+	fades out towards the text. It is decorative, so it is hidden from
+	assistive technology.
 -->
 <script lang="ts">
-	import { stipple } from '$lib/data/stipple';
+	import { contours } from '$lib/data/contour';
 
-	const W = 520;
-	const H = 300;
-	const BASE = 268;
+	const W = 560;
+	const H = 360;
+	const CX = 372;
+	const CY = 186;
+	const COUNT = 24;
+	const INDEX = 8;
 
-	const dots = stipple(2600, W, BASE, 7);
+	const rings = contours({ count: COUNT, cx: CX, cy: CY, r0: 12, step: 13, seed: 11 });
 
-	// The mast stands at the crest.
-	const mastX = 322;
-	const mastTop = 48;
-	const mastBottom = 150;
+	/** Inner rings darker, outer ones dissolving into the paper. */
+	const alpha = (drift: number) => Math.round((0.62 - 0.46 * drift) * 100) / 100;
 </script>
 
-<svg class="art" viewBox="0 0 {W} {H}" width={W} height={H} aria-hidden="true" focusable="false">
-	<g class="mound">
-		{#each dots as dot, i (i)}
-			<circle cx={dot.x} cy={dot.y} r={dot.r} />
+<svg
+	class="canvas"
+	viewBox="0 0 {W} {H}"
+	preserveAspectRatio="xMidYMid slice"
+	aria-hidden="true"
+	focusable="false"
+>
+	<defs>
+		<linearGradient id="hero-fade" x1="0" x2="1" y1="0" y2="0">
+			<stop offset="0" stop-color="#fff" stop-opacity="0" />
+			<stop offset="0.38" stop-color="#fff" stop-opacity="1" />
+		</linearGradient>
+		<mask id="hero-mask">
+			<rect width={W} height={H} fill="url(#hero-fade)" />
+		</mask>
+	</defs>
+	<g class="field" mask="url(#hero-mask)">
+		{#each rings as ring (ring.k)}
+			<path d={ring.d} class:index={ring.k === INDEX} style:opacity={alpha(ring.drift)} />
 		{/each}
-	</g>
-	<g class="mark">
-		<line x1={mastX} y1={mastTop} x2={mastX} y2={mastBottom} />
-		<path d="M{mastX + 1} {mastTop + 2} l 46 11 l -46 11 z" />
-		<line x1={mastX - 14} y1={mastBottom} x2={mastX + 14} y2={mastBottom} />
+		<circle class="mark" cx={CX} cy={CY} r="3.2" />
 	</g>
 </svg>
 
 <style>
-	.art {
+	/* Fills whatever box it is given and crops the field rather than letterboxing
+	   it, so beside a tall column of text it runs the column's full height. */
+	.canvas {
 		display: block;
-		max-width: 100%;
-		height: auto;
+		width: 100%;
+		height: 100%;
 	}
 
-	.mound circle {
-		fill: var(--ink);
-		opacity: 0.28;
-	}
-
-	.mark line {
+	.field path {
+		fill: none;
 		stroke: var(--ink);
-		stroke-width: 1.4;
-		stroke-linecap: round;
-		opacity: 0.7;
+		stroke-width: 0.8;
+		stroke-linejoin: round;
 	}
 
-	.mark path {
+	.field path.index {
+		stroke: var(--accent);
+		stroke-width: 1.3;
+		opacity: 0.95 !important;
+	}
+
+	.mark {
 		fill: var(--accent);
-		opacity: 0.85;
 	}
 </style>
