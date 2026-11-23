@@ -182,18 +182,25 @@ jobs:
       # Cloudflare serves from the root, GitHub Pages from /<repo>, and the
       # base path is baked in at build time, so the Cloudflare build comes
       # first and the GitHub Pages build below overwrites it.
+      # Both steps continue on error: Cloudflare is the second host, and a
+      # failed upload there must not stop the GitHub Pages deploy below.
       - name: Build site for Cloudflare
         if: env.CF_TOKEN != ''
+        continue-on-error: true
         run: npm run build
         working-directory: frontend
 
       - name: Deploy to Cloudflare
         if: env.CF_TOKEN != ''
+        continue-on-error: true
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: frontend
+          # The action's default is wrangler 3, which cannot deploy a worker
+          # that is only static assets; that needs 4.
+          wranglerVersion: '4'
           command: deploy
 
       - name: Build site
