@@ -1,0 +1,12 @@
+// The Cloudflare worker that serves the built site as static assets, as a
+// second host beside GitHub Pages. The pipeline builds the site with no base
+// path and runs `wrangler deploy` here; nothing is built on Cloudflare's side,
+// because the data only exists on the GitHub runner after the export.
+{
+	"name": "anti-lethe",
+	"compatibility_date": "2025-01-01",
+	"assets": {
+		"directory": "./build",
+		"not_found_handling": "404-page"
+	}
+}

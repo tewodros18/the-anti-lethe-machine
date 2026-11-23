@@ -1,0 +1,5 @@
+# Read by `wrangler deploy` from the build directory. The adapter writes a
+# gzip and a brotli copy beside every file for hosts that serve them; Cloudflare
+# compresses on the fly and would only store the copies, so they stay home.
+*.gz
+*.br
