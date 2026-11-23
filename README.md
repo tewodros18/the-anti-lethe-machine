@@ -538,7 +538,8 @@ from the root, leave it unset.
 The same run can also deploy the site to a Cloudflare worker that serves it
 as static assets, which is useful where GitHub's edge is slow. Create a
 worker named `anti-lethe` in the Cloudflare dashboard (*Workers & Pages →
-Create → Upload static files*; any placeholder upload will do), make an API
+Create → Upload static files*; the dialog insists on an initial upload, and a
+single empty `index.html` satisfies it), make an API
 token with *Account → Workers Scripts → Edit*, and add two repository
 secrets: `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`. With both set,
 the workflow builds the site once more with no base path and runs
